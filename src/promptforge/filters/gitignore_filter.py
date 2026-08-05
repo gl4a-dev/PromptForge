@@ -1,13 +1,18 @@
 from pathlib import Path
+from pathspec import PathSpec
 
+from promptforge.filters.filter import Filter
+from promptforge.models.project_file import ProjectFile
+from promptforge.models.project_diretory import ProjectDirectory
 
-class GitIgnoreFilter:
+class GitIgnoreFilter(Filter):
 
     def __init__(self, project_root: Path) -> None:
-        self._project_root = project_root
+        self._project_root = project_root.resolve()
         self._gitignore = project_root / ".gitignore"
 
         self._patterns = self._load_patterns()
+        self._spec = PathSpec.from_lines("gitignore", self._patterns)
 
     def _load_patterns(self) -> list[str]:
         if not self._gitignore.exists():
@@ -27,3 +32,14 @@ class GitIgnoreFilter:
             patterns.append(line)
 
         return patterns
+
+    def _accept_path(self, path: Path) -> bool:
+        relative_path = path.relative_to(self._project_root)
+
+        return not self._spec.match_file(relative_path.as_posix())
+
+    def accept_file(self, file: ProjectFile) -> bool:
+        return self._accept_path(file.path)
+
+    def accept_directory(self, directory: ProjectDirectory) -> bool:
+        return self._accept_path(directory.path)

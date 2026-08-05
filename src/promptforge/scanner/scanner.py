@@ -8,6 +8,8 @@ from promptforge.models.scan_result import ScanResult
 class Scanner:
 
     def scan(self, root: Path) -> ScanResult:
+        root = root.resolve()
+
         directories: list[ProjectDirectory] = []
         files: list[ProjectFile] = []
 
