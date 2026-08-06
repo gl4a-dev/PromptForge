@@ -35,6 +35,7 @@ class FilterPipeline:
 
     def apply(self, scan_result: ScanResult) -> ScanResult:
         return ScanResult(
+            root=scan_result.root,
             directories=self._filter_directories(scan_result.directories),
             files=self._filter_files(scan_result.files),
         )

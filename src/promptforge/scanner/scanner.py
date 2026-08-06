@@ -10,6 +10,7 @@ class Scanner:
     def scan(self, root: Path) -> ScanResult:
         root = root.resolve()
 
+        root_directory = ProjectDirectory(root)
         directories: list[ProjectDirectory] = []
         files: list[ProjectFile] = []
 
@@ -21,6 +22,7 @@ class Scanner:
                 files.append(ProjectFile(path))
 
         return ScanResult(
+            root=root_directory,
             directories=directories,
             files=files,
         )
