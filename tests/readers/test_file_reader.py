@@ -56,3 +56,16 @@ def test_read_preserves_content(tmp_path: Path) -> None:
     result = FileReader().read(file)
 
     assert result == content
+
+def test_read_binary_file_returns_none(tmp_path: Path) -> None:
+    file_path = tmp_path / "image.png"
+
+    file_path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+    )
+
+    project_file = ProjectFile(file_path)
+
+    result = FileReader().read(project_file)
+
+    assert result is None

@@ -87,3 +87,25 @@ def test_build_prompt_with_filter(tmp_path: Path) -> None:
 
     assert "## cache.py" not in result
     assert "should not appear" not in result
+
+def test_build_prompt_ignores_binary_files(tmp_path: Path) -> None:
+    main = tmp_path / "main.py"
+    main.write_text(
+        'print("Hello")\n',
+        encoding="utf-8",
+    )
+
+    image = tmp_path / "image.png"
+    image.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+    )
+
+    scan_result = Scanner().scan(tmp_path)
+
+    result = PromptBuilder().build(scan_result)
+
+    assert "main.py" in result
+    assert 'print("Hello")' in result
+
+    assert "image.png" in result
+    assert "## image.png" not in result
