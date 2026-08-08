@@ -26,12 +26,13 @@ classifiers = [
 ]
 
 dependencies = [
+    "click>=8.4.2",
     "pathspec>=0.12.1",
     "pygments>=2.20",
 ]
 
 [project.scripts]
-promptforge = "promptforge.cli:main"
+promptforge = "promptforge.cli.main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

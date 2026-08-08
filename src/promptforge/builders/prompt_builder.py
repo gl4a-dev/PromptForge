@@ -37,6 +37,9 @@ class PromptBuilder:
 
             content = self._file_reader.read(node.entry)
 
+            if content is None:
+                continue
+
             sections.append(
                 self._content_formatter.format(
                     node.entry,
