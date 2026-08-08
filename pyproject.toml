@@ -27,6 +27,7 @@ classifiers = [
 
 dependencies = [
     "pathspec>=0.12.1",
+    "pygments>=2.20",
 ]
 
 [project.scripts]
