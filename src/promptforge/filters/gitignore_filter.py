@@ -36,7 +36,15 @@ class GitIgnoreFilter(Filter):
     def _accept_path(self, path: Path) -> bool:
         relative_path = path.relative_to(self._project_root)
 
-        return not self._spec.match_file(relative_path.as_posix())
+        if relative_path.parts and relative_path.parts[0] == ".git":
+            return False
+
+        path_string = relative_path.as_posix()
+
+        if path.is_dir():
+            path_string += "/"
+
+        return not self._spec.match_file(path_string)
 
     def accept_file(self, file: ProjectFile) -> bool:
         return self._accept_path(file.path)
