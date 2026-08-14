@@ -20,7 +20,7 @@ class ContentFormatter:
             f"## {relative_path}\n\n"
             f"```{language_identifier}\n"
             f"{content}"
-            f"```\n"
+            f"\n```\n"
         )
 
     def _get_language_identifier(self, language: str | None) -> str:
