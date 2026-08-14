@@ -13,7 +13,7 @@ def test_format_empty_tree(tmp_path: Path) -> None:
 
     result = TreeFormatter().format(tree)
 
-    assert result == tmp_path.name
+    assert result == "```text\n" + tmp_path.name + "\n```"
 
 def test_format_root_files(tmp_path: Path) -> None:
     root = TreeNode(
@@ -31,9 +31,11 @@ def test_format_root_files(tmp_path: Path) -> None:
     result = TreeFormatter().format(root)
 
     assert result == "\n".join([
+        "```text",
         tmp_path.name,
         "├── src",
         "└── README.md",
+        "```",
     ])
 
 def test_format_nested_directories(tmp_path: Path) -> None:
@@ -64,10 +66,12 @@ def test_format_nested_directories(tmp_path: Path) -> None:
     result = TreeFormatter().format(tree)
 
     assert result == "\n".join([
+        "```text",
         tmp_path.name,
         "└── src",
         "    └── promptforge",
         "        └── cli.py",
+        "```",
     ])
 
 from promptforge.scanner.scanner import Scanner
@@ -89,11 +93,13 @@ def test_format_tree_builder_result(tmp_path: Path) -> None:
     result = TreeFormatter().format(tree)
 
     assert result == "\n".join([
+        "```text",
         tmp_path.name,
         "├── src",
         "│   ├── main.py",
         "│   └── utils.py",
         "└── README.md",
+        "```",
     ])
 
 def test_format_complex_project(tmp_path: Path) -> None:
@@ -132,6 +138,7 @@ def test_format_complex_project(tmp_path: Path) -> None:
     result = TreeFormatter().format(tree)
 
     assert result == "\n".join([
+        "```text",
         tmp_path.name,
         "├── src",
         "│   ├── promptforge",
@@ -149,4 +156,5 @@ def test_format_complex_project(tmp_path: Path) -> None:
         "│   └── scanner",
         "│       └── test_scanner.py",
         "└── README.md",
+        "```",
     ])
