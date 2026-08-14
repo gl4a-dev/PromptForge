@@ -1,4 +1,5 @@
 from pathlib import Path
+import pytest
 
 from promptforge.formatters.content_formatter import ContentFormatter
 from promptforge.readers.file_reader import FileReader
@@ -30,7 +31,7 @@ def test_format_relative_path(tmp_path: Path) -> None:
         "## src/main.py\n\n"
         "```python\n"
         "print('hello')\n"
-        "```\n"
+        "\n```\n"
     )
 
 def test_format_does_not_include_absolute_path(tmp_path: Path) -> None:
@@ -56,13 +57,6 @@ def test_format_does_not_include_absolute_path(tmp_path: Path) -> None:
 
     assert "src/main.py" in result
     assert str(tmp_path) not in result
-
-import pytest
-
-from promptforge.formatters.content_formatter import ContentFormatter
-from promptforge.readers.file_reader import FileReader
-from promptforge.scanner.scanner import Scanner
-
 
 @pytest.mark.parametrize(
     ("filename", "content", "language"),
@@ -91,5 +85,5 @@ def test_format_known_language(tmp_path: Path, filename: str, content: str, lang
         f"## {filename}\n\n"
         f"```{language}\n"
         f"{content}"
-        "```\n"
+        "\n```\n"
     )

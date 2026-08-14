@@ -16,7 +16,7 @@ class TreeFormatter:
                 is_last=is_last,
             )
 
-        return "\n".join(lines)
+        return f"```text\n{'\n'.join(lines)}\n```"
 
     def _append_node(self, node: TreeNode, lines: list[str], prefix: str, is_last: bool) -> None:
         connector = "└── " if is_last else "├── "
