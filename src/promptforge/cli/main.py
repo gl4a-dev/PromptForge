@@ -4,6 +4,7 @@ import click
 
 from promptforge.builders.prompt_builder import PromptBuilder
 from promptforge.filters.gitignore_filter import GitIgnoreFilter
+from promptforge.git.repository import GitRepository
 from promptforge.filters.pipline import FilterPipeline
 from promptforge.scanner.scanner import Scanner
 
@@ -25,8 +26,14 @@ def main(path: Path) -> None:
     scanner = Scanner()
     scan_result = scanner.scan(path)
 
+    scan_root = path.resolve()
+    git_root = GitRepository.discover(scan_root)
+
     pipeline = FilterPipeline([
-        GitIgnoreFilter(path),
+        GitIgnoreFilter(
+            scan_root,
+            git_root,
+        ),
     ])
 
     filtered_result = pipeline.apply(scan_result)
