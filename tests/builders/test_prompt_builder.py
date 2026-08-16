@@ -79,7 +79,7 @@ def test_build_prompt_with_filter(tmp_path: Path) -> None:
     scan_result = Scanner().scan(tmp_path)
 
     pipeline = FilterPipeline([
-        GitIgnoreFilter(tmp_path),
+        GitIgnoreFilter(tmp_path, tmp_path),
     ])
 
     filtered = pipeline.apply(scan_result)
