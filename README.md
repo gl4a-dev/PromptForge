@@ -46,6 +46,18 @@ A project path can also be provided explicitly:
 promptforge /path/to/project
 ```
 
+Write directly to a UTF-8 file:
+
+```bash
+promptforge . --output prompt.md
+```
+
+or 
+
+```bash
+promptforge . -o prompt.md
+```
+
 To display the available CLI options:
 
 ```bash
@@ -113,7 +125,7 @@ The test suite covers the project's core components as well as CLI integration.
 
 ## Version
 
-Current version: **1.0.0**
+Current version: **1.0.1**
 
 ## License
 
