@@ -204,3 +204,50 @@ def test_main_ignores_git_directory(tmp_path: Path) -> None:
     assert ".git" not in result.output
     assert "some_file" not in result.output
     assert "internal git data" not in result.output
+
+def test_cli_output_option(tmp_path: Path) -> None:
+    runner = CliRunner()
+
+    output = tmp_path / "prompt.md"
+
+    result = runner.invoke(
+        main,
+        [
+            str(tmp_path),
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    assert output.exists()
+
+def test_cli_writes_output_file(tmp_path: Path) -> None:
+    (tmp_path / "main.py").write_text(
+        "print('Hello')",
+        encoding="utf-8",
+    )
+
+    output = tmp_path / "prompt.md"
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [
+            str(tmp_path),
+            "--output",
+            str(output),
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    assert output.exists()
+
+    content = output.read_text(
+        encoding="utf-8",
+    )
+
+    assert "main.py" in content
