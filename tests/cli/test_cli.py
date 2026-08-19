@@ -251,3 +251,70 @@ def test_cli_writes_output_file(tmp_path: Path) -> None:
     )
 
     assert "main.py" in content
+
+def test_gitignore_is_used_by_default(tmp_path: Path):
+    project = tmp_path
+
+    (project / ".git").mkdir()
+
+    (project / ".gitignore").write_text(
+        "secret.txt\n",
+        encoding="utf-8",
+    )
+
+    (project / "secret.txt").write_text(
+        "hidden",
+        encoding="utf-8",
+    )
+
+    (project / "main.py").write_text(
+        "print('hello')",
+        encoding="utf-8",
+    )
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [str(project)],
+    )
+
+    assert result.exit_code == 0
+
+    assert "main.py" in result.output
+    assert "## secret.txt" not in result.output
+
+def test_no_gitignore_option_disables_gitignore_filter(tmp_path: Path):
+    project = tmp_path
+
+    (project / ".git").mkdir()
+
+    (project / ".gitignore").write_text(
+        "secret.txt\n",
+        encoding="utf-8",
+    )
+
+    (project / "secret.txt").write_text(
+        "hidden",
+        encoding="utf-8",
+    )
+
+    (project / "main.py").write_text(
+        "print('hello')",
+        encoding="utf-8",
+    )
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [
+            str(project),
+            "--no-gitignore",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    assert "## main.py" in result.output
+    assert "## secret.txt" in result.output
