@@ -1,12 +1,32 @@
 from pathlib import Path
 import click
 
+from promptforge.cli.config import PromptForgeConfig
+from promptforge.cli.writer import PromptWriter
 from promptforge.builders.prompt_builder import PromptBuilder
+from promptforge.filters.pipline import FilterPipeline
+from promptforge.filters.filter import Filter
 from promptforge.filters.gitignore_filter import GitIgnoreFilter
 from promptforge.git.repository import GitRepository
-from promptforge.filters.pipline import FilterPipeline
 from promptforge.scanner.scanner import Scanner
-from promptforge.cli.writer import PromptWriter
+
+
+def _build_filter_pipeline(
+    config: PromptForgeConfig, 
+    scan_root: Path, 
+    git_root: Path | None
+) -> FilterPipeline:
+    filters: list[Filter] = []
+
+    if config.use_gitignore:
+        filters.append(
+            GitIgnoreFilter(
+                scan_root,
+                git_root,
+            )
+        )
+
+    return FilterPipeline(filters)
 
 
 @click.command()
@@ -29,8 +49,21 @@ from promptforge.cli.writer import PromptWriter
     ),
     help="Write the generated prompt to a UTF-8 file.",
 )
-def main(path: Path, output: Path | None) -> None:
+@click.option(
+    "--no-gitignore",
+    is_flag=True,
+    help="Do not apply .gitignore rules.",
+)
+def main(
+    path: Path,
+    output: Path | None,
+    no_gitignore: bool,
+) -> None:
     """Generate a prompt from a project."""
+
+    config = PromptForgeConfig(
+        use_gitignore=not no_gitignore
+    )
 
     scanner = Scanner()
     scan_result = scanner.scan(path)
@@ -38,12 +71,11 @@ def main(path: Path, output: Path | None) -> None:
     scan_root = path.resolve()
     git_root = GitRepository.discover(scan_root)
 
-    pipeline = FilterPipeline([
-        GitIgnoreFilter(
-            scan_root,
-            git_root,
-        ),
-    ])
+    pipeline = _build_filter_pipeline(
+        config,
+        scan_root,
+        git_root,
+    )
 
     filtered_result = pipeline.apply(scan_result)
 
