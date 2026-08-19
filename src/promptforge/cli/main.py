@@ -7,6 +7,7 @@ from promptforge.builders.prompt_builder import PromptBuilder
 from promptforge.filters.pipline import FilterPipeline
 from promptforge.filters.filter import Filter
 from promptforge.filters.gitignore_filter import GitIgnoreFilter
+from promptforge.filters.pattern_filter import PatternFilter
 from promptforge.git.repository import GitRepository
 from promptforge.scanner.scanner import Scanner
 
@@ -26,6 +27,14 @@ def _build_filter_pipeline(
             )
         )
 
+    if config.ignore_patterns:
+        filters.append(
+            PatternFilter(
+                scan_root,
+                config.ignore_patterns,
+            )
+        )
+
     return FilterPipeline(filters)
 
 
@@ -41,6 +50,18 @@ def _build_filter_pipeline(
     default=".",
 )
 @click.option(
+    "--no-gitignore",
+    is_flag=True,
+    help="Do not apply .gitignore rules.",
+)
+@click.option(
+    "--ignore",
+    "-i",
+    multiple=True, 
+    type=str,
+    help="Ignore additional file patterns.",
+)
+@click.option(
     "-o",
     "--output",
     type=click.Path(
@@ -49,20 +70,17 @@ def _build_filter_pipeline(
     ),
     help="Write the generated prompt to a UTF-8 file.",
 )
-@click.option(
-    "--no-gitignore",
-    is_flag=True,
-    help="Do not apply .gitignore rules.",
-)
 def main(
     path: Path,
-    output: Path | None,
     no_gitignore: bool,
+    ignore,
+    output: Path | None,
 ) -> None:
     """Generate a prompt from a project."""
 
     config = PromptForgeConfig(
-        use_gitignore=not no_gitignore
+        use_gitignore=not no_gitignore,
+        ignore_patterns=list(ignore)
     )
 
     scanner = Scanner()
