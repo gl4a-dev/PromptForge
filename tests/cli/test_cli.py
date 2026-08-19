@@ -2,7 +2,9 @@ import pytest
 from pathlib import Path
 from click.testing import CliRunner
 
-from promptforge.cli.main import main
+from promptforge.cli.main import main, _build_filter_pipeline
+from promptforge.cli.config import PromptForgeConfig
+from promptforge.filters.pattern_filter import PatternFilter
 
 
 def test_main_generates_prompt_with_gitignore(tmp_path: Path) -> None:
@@ -318,3 +320,105 @@ def test_no_gitignore_option_disables_gitignore_filter(tmp_path: Path):
 
     assert "## main.py" in result.output
     assert "## secret.txt" in result.output
+
+def test_main_ignores_files_matching_single_pattern(tmp_path: Path) -> None:
+    main_file = tmp_path / "main.py"
+    main_file.write_text('print("Hello")\n', encoding="utf-8")
+
+    csv_file = tmp_path / "data.csv"
+    csv_file.write_text("id,name\n1,test\n", encoding="utf-8")
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [str(tmp_path), "--ignore", "*.csv"],
+    )
+
+    assert result.exit_code == 0
+
+    assert "main.py" in result.output
+    assert 'print("Hello")' in result.output
+
+    assert "data.csv" not in result.output
+    assert "id,name" not in result.output
+
+
+def test_main_ignores_files_matching_multiple_patterns(tmp_path: Path) -> None:
+    main_file = tmp_path / "main.py"
+    main_file.write_text('print("Hello")\n', encoding="utf-8")
+
+    csv_file = tmp_path / "data.csv"
+    csv_file.write_text("id,name\n1,test\n", encoding="utf-8")
+
+    log_file = tmp_path / "app.log"
+    log_file.write_text("INFO: started\n", encoding="utf-8")
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [
+            str(tmp_path),
+            "--ignore",
+            "*.csv",
+            "-i",
+            "*.log",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    assert "main.py" in result.output
+    assert "data.csv" not in result.output
+    assert "app.log" not in result.output
+
+
+def test_main_ignore_works_alongside_no_gitignore(tmp_path: Path) -> None:
+    (tmp_path / ".git").mkdir()
+
+    (tmp_path / ".gitignore").write_text("secret.txt\n", encoding="utf-8")
+    (tmp_path / "secret.txt").write_text("hidden", encoding="utf-8")
+    (tmp_path / "temp.log").write_text("log content", encoding="utf-8")
+    (tmp_path / "main.py").write_text("print('hello')", encoding="utf-8")
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [
+            str(tmp_path),
+            "--no-gitignore",
+            "--ignore",
+            "*.log",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    assert "## secret.txt" in result.output
+    assert "temp.log" not in result.output
+    assert "main.py" in result.output
+
+
+def test_build_filter_pipeline_adds_pattern_filter_when_ignore_patterns_present(tmp_path: Path) -> None:
+    config = PromptForgeConfig(
+        use_gitignore=False,
+        ignore_patterns=["*.csv", "*.log"],
+    )
+
+    pipeline = _build_filter_pipeline(config, tmp_path, None)
+
+    assert len(pipeline._filters) == 1
+    assert isinstance(pipeline._filters[0], PatternFilter)
+
+
+def test_build_filter_pipeline_empty_when_no_filters_active(tmp_path: Path) -> None:
+    config = PromptForgeConfig(
+        use_gitignore=False,
+        ignore_patterns=[]
+    )
+
+    pipeline = _build_filter_pipeline(config, tmp_path, None)
+
+    assert len(pipeline._filters) == 0
