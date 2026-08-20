@@ -37,6 +37,26 @@ def _build_filter_pipeline(
 
     return FilterPipeline(filters)
 
+def _build_prompt_forge(
+    config: PromptForgeConfig,
+) -> PromptBuilder:
+    if config.tree_only:
+        return PromptBuilder(
+            build_tree=True, 
+            build_content=False
+        )
+
+    if config.content_only:
+        return PromptBuilder(
+            build_tree=False,
+            build_content=True
+        )
+
+    return PromptBuilder(
+        build_tree=True,
+        build_content=True
+    )
+
 
 @click.command()
 @click.argument(
@@ -55,11 +75,21 @@ def _build_filter_pipeline(
     help="Do not apply .gitignore rules.",
 )
 @click.option(
+    "--tree-only",
+    is_flag=True,
+    help="Write only the project tree on the prompt.",
+)
+@click.option(
+    "--content-only",
+    is_flag=True,
+    help="Write only the files content on the prompt.",
+)
+@click.option(
     "--ignore",
     "-i",
     multiple=True, 
     type=str,
-    help="Ignore additional file patterns.",
+    help="Ignore additional file patterns. Same syntax of .gitignore",
 )
 @click.option(
     "-o",
@@ -74,13 +104,17 @@ def main(
     path: Path,
     no_gitignore: bool,
     ignore,
+    tree_only: bool,
+    content_only: bool,
     output: Path | None,
 ) -> None:
     """Generate a prompt from a project."""
 
     config = PromptForgeConfig(
         use_gitignore=not no_gitignore,
-        ignore_patterns=list(ignore)
+        ignore_patterns=list(ignore),
+        tree_only=tree_only,
+        content_only=content_only
     )
 
     scanner = Scanner()
@@ -95,9 +129,11 @@ def main(
         git_root,
     )
 
+    prompt_builder = _build_prompt_forge(config)
+
     filtered_result = pipeline.apply(scan_result)
 
-    prompt = PromptBuilder().build(filtered_result)
+    prompt = prompt_builder.build(filtered_result)
 
     PromptWriter.write(
         prompt,
