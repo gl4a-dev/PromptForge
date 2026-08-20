@@ -2,7 +2,11 @@ import pytest
 from pathlib import Path
 from click.testing import CliRunner
 
-from promptforge.cli.main import main, _build_filter_pipeline
+from promptforge.cli.main import (
+    main, 
+    _build_filter_pipeline,
+    _build_prompt_forge,
+)
 from promptforge.cli.config import PromptForgeConfig
 from promptforge.filters.pattern_filter import PatternFilter
 
@@ -422,3 +426,75 @@ def test_build_filter_pipeline_empty_when_no_filters_active(tmp_path: Path) -> N
     pipeline = _build_filter_pipeline(config, tmp_path, None)
 
     assert len(pipeline._filters) == 0
+
+def test_main_tree_only_outputs_only_project_tree(tmp_path: Path) -> None:
+    (tmp_path / "main.py").write_text(
+        'print("Hello")\n',
+        encoding="utf-8",
+    )
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [
+            str(tmp_path),
+            "--tree-only",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    assert "main.py" in result.output
+    assert 'print("Hello")' not in result.output
+    assert "## main.py" not in result.output
+
+def test_main_content_only_outputs_only_file_contents(tmp_path: Path) -> None:
+    (tmp_path / "main.py").write_text(
+        'print("Hello")\n',
+        encoding="utf-8",
+    )
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        main,
+        [
+            str(tmp_path),
+            "--content-only",
+        ],
+    )
+
+    assert result.exit_code == 0
+
+    assert "## main.py" in result.output
+    assert 'print("Hello")' in result.output
+
+    assert "├──" not in result.output
+    assert "└──" not in result.output
+
+@pytest.mark.parametrize(
+    "tree_only, content_only, expected_tree, expected_content",
+    [
+        (False, False, True, True),
+        (True, False, True, False),
+        (False, True, False, True),
+    ],
+)
+def test_build_prompt_forge(
+    tree_only: bool,
+    content_only: bool,
+    expected_tree: bool,
+    expected_content: bool,
+) -> None:
+    config = PromptForgeConfig(
+        use_gitignore=True,
+        ignore_patterns=[],
+        tree_only=tree_only,
+        content_only=content_only,
+    )
+
+    builder = _build_prompt_forge(config)
+
+    assert builder.build_tree is expected_tree
+    assert builder.build_content is expected_content
