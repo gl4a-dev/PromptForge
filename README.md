@@ -40,6 +40,12 @@ Or install directly from Git:
 python -m pip install "promptforge @ git+<repository-url>@<version>"
 ```
 
+For example:
+
+```bash
+python -m pip install "promptforge @ git+https://github.com/gl4a-dev/PromptForge.git@v2.0.0"
+```
+
 ## CLI Usage
 
 After installation, PromptForge can be executed using the `promptforge` command.
